@@ -21,28 +21,38 @@
 # SOFTWARE.
 
 """
-This component contains all information which manually configured 
-by administrator to tune the application.
+This component provides routing function for the application
 """
 
 from __future__ import print_function
 
-class config(object):
-    USE_DHCP = True
-    USE_STATIC_IP = False
-    USE_VLAN = False
+from pox.core import core
+from lib import OneWayPath
+from bucket import bucket
 
-    # Ethernet Routing (choose one): {'DFS', 'Djisktra'}
-    LOCAL_ROUTING = 'DFS'
+class DFS(object):
+    
+    @classmethod
+    def findAllPairsPath(cls, matrix):
+        path = {}
+        def findOneSourcePath(now, origin, way = []):
+            for i in matrix[now]:
+                if i in way or i == origin:
+                    continue
+                else:
+                    if i not in path[origin]:
+                        path[origin][i] = [OneWayPath(way + [i], origin)]
+                    else:
+                        path[origin][i].append(OneWayPath(way + [i], origin))
+                    findOneSourcePath(i, origin, way + [i])
 
-    # contains entries of switch used as gateway
-    USE_GATEWAY = False
+        for i in matrix:
+            path[i] = {}
+            findOneSourcePath(i, i)
+        return path
 
-    USE_OSPF = False
-    OSPF_GATEWAY = {}
-
-    USE_BGP = False
-    BGP_GATEWAY = {}
-
-    USE_STATIC_GATEWAY = False
-    STATIC_GATEWAY = {}
+class Djisktra(object):
+    
+    @classmethod
+    def findPath(cls):
+        pass

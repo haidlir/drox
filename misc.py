@@ -21,28 +21,6 @@
 # SOFTWARE.
 
 """
-This component contains all information which manually configured 
-by administrator to tune the application.
+This is the misc component of the application, which contains miscellaneous functions
+to support the application.
 """
-
-from __future__ import print_function
-
-class config(object):
-    USE_DHCP = True
-    USE_STATIC_IP = False
-    USE_VLAN = False
-
-    # Ethernet Routing (choose one): {'DFS', 'Djisktra'}
-    LOCAL_ROUTING = 'DFS'
-
-    # contains entries of switch used as gateway
-    USE_GATEWAY = False
-
-    USE_OSPF = False
-    OSPF_GATEWAY = {}
-
-    USE_BGP = False
-    BGP_GATEWAY = {}
-
-    USE_STATIC_GATEWAY = False
-    STATIC_GATEWAY = {}
