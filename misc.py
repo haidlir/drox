@@ -24,9 +24,8 @@
 This is the misc component of the application, which contains miscellaneous functions
 to support the application.
 """
+
 from __future__ import print_function
-import time
-from random import randint
 from pox.core import core
 import pox.openflow.libopenflow_01 as of
 from bucket import bucket

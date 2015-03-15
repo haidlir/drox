@@ -52,6 +52,7 @@ class main(EventMixin):
             bucket.gateway = config.STATIC_GATEWAY
 
         Timer(10, self._routing, recurring=True)
+        Timer(1, self._send_FlowStatsReq, recurring=True)
 
     def _routing(self):
         if config.LOCAL_ROUTING == 'DFS':
@@ -60,7 +61,8 @@ class main(EventMixin):
             pass
 
     def _send_FlowStatsReq(self):
-        pass
+        for connection in core.openflow._connections:
+            connection.send(of.ofp_stats_request(body=of.ofp_flow_stats_request()))
 
     def _periodic_report(self):
         pass
@@ -189,8 +191,43 @@ class main(EventMixin):
 
                 # belum selesai, masih mengandalahkan 10s _findPath(), belum realtime ketika hidup
 
-    def _handle_openflow_FlowStatsReceivedS(self, event):
-        pass
+    def _handle_openflow_FlowStatsReceived(self, event):
+        dpid = event.dpid
+        will_delete = []
+        temp = {}
+        for cookie in bucket.flow_entry[dpid]:
+            found = False
+            for flow_event in event.stats:
+                if (cookie == flow_event.cookie) and (flow_event.actions[-1].port == bucket.flow_entry[dpid][cookie].out_port):
+                    bucket.flow_entry[dpid][cookie].bps = (flow_event.byte_count - bucket.flow_entry[dpid][cookie].byte_count)*8
+                    bucket.flow_entry[dpid][cookie].byte_count = flow_event.byte_count
+
+                    for act in flow_event.actions:
+                        if isinstance(act, of.ofp_action_output):
+                            if act.port in temp:
+                                temp[act.port] += bucket.flow_entry[dpid][cookie].bps
+                            else:
+                                temp[act.port] = bucket.flow_entry[dpid][cookie].bps
+                    found = True
+                    break
+
+            if not found:
+                will_delete.append(cookie) # kalau cookie sudah tidak ada, aka flow has been removed
+
+        for i in will_delete:
+            bucket.flow_entry[dpid].pop(i, None)
+
+        for output_port in bucket.port_info[dpid]:
+            if output_port in temp:
+                bucket.port_info[dpid][output_port].set_load(temp[output_port]/10.**6)
+            else:
+                bucket.port_info[dpid][output_port].set_load(0.)
+
+        for dest_switch in bucket.matrix_adj[dpid]:
+            bucket.matrix_adj[dpid][dest_switch].update_load()
+
+        if dpid in bucket.gateway:
+            bucket.gateway[dpid].update_load()
 
     def _handle_openflow_PacketIn(self, event):
         data_frame = event.parsed

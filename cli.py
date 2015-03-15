@@ -28,9 +28,8 @@ function for the application.
 from __future__ import print_function
 import time
 
-from bucket import bucket
-
 from pox.core import core
+from bucket import bucket
 
 class cli(object):
 

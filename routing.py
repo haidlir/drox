@@ -27,8 +27,9 @@ This component provides routing function for the application
 from __future__ import print_function
 
 from pox.core import core
-from lib import OneWayPath
 from bucket import bucket
+
+from lib import OneWayPath
 
 class DFS(object):
     

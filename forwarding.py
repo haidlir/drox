@@ -25,16 +25,18 @@ This component provides forwarding function
 """
 
 from __future__ import print_function
-import time
 from random import randint
+
 from pox.core import core
 import pox.openflow.libopenflow_01 as of
+from config import config
 from bucket import bucket
+import routing
+
 import pox.lib.packet as pkt
 from pox.lib.addresses import IPAddr,EthAddr
 from lib import *
-import routing
-from config import config
+
 
 class Forwarding(object):
 
@@ -102,10 +104,10 @@ class Forwarding(object):
 
             if i == len(path)-1:
                 msg.actions.append(of.ofp_action_output(port = bucket.arp_table[event.parsed.next.dstip].port))
-                msg_keluar = bucket.arp_table[event.parsed.next.dstip].port
+                msg_outport = bucket.arp_table[event.parsed.next.dstip].port
             else:
                 msg.actions.append(of.ofp_action_output(port = bucket.matrix_adj[path[i]][path[i+1]].interface))
-                msg_keluar = bucket.matrix_adj[path[i]][path[i+1]].interface
+                msg_outport = bucket.matrix_adj[path[i]][path[i+1]].interface
 
             core.openflow.sendToDPID(path[i], msg)
             if msg.match.nw_src in bucket.arp_table:
@@ -115,7 +117,7 @@ class Forwarding(object):
                                                                    msg.match.tp_src,\
                                                                    msg.match.tp_dst,\
                                                                    msg.in_port,\
-                                                                   msg_keluar,\
+                                                                   msg_outport,\
                                                                    path)
             elif path[i] in bucket.gateway:
                 bucket.flow_entry[path[i]][msg.cookie] = FlowEntry(msg.match.nw_src,\
@@ -124,7 +126,7 @@ class Forwarding(object):
                                                                    msg.match.tp_src,\
                                                                    msg.match.tp_dst,\
                                                                    msg.in_port,\
-                                                                   msg_keluar,\
+                                                                   msg_outport,\
                                                                    path,\
                                                                    dpid = path[i])                                    
 
@@ -176,14 +178,14 @@ class Forwarding(object):
                 msg.in_port = bucket.matrix_adj[path[i]][path[i-1]].interface
 
             if i == len(path)-1:
-                    msg.actions = [of.ofp_action_dl_addr.set_src(EthAddr('11:10:11:11:01:18')),\
+                    msg.actions = [of.ofp_action_dl_addr.set_src(EthAddr('02:00:00:00:00:24')),\
                                    of.ofp_action_dl_addr.set_dst(bucket.arp_table[bucket.gateway[gw].next_hop].mac_addr),\
                                    of.ofp_action_output(port = bucket.gateway[gw].port_no)]
-                    msg_keluar = bucket.gateway[gw].port_no
+                    msg_outport = bucket.gateway[gw].port_no
 
             else:
                 msg.actions = [of.ofp_action_output(port = bucket.matrix_adj[path[i]][path[i+1]].interface)]
-                msg_keluar = bucket.matrix_adj[path[i]][path[i+1]].interface
+                msg_outport = bucket.matrix_adj[path[i]][path[i+1]].interface
 
             core.openflow.sendToDPID(path[i], msg)
             bucket.flow_entry[path[i]][msg.cookie] = FlowEntry(msg.match.nw_src,\
@@ -192,5 +194,5 @@ class Forwarding(object):
                                                                msg.match.tp_src,\
                                                                msg.match.tp_dst,\
                                                                msg.in_port,\
-                                                               msg_keluar,\
+                                                               msg_outport,\
                                                                path)
