@@ -53,10 +53,15 @@ class cli(object):
             for j in bucket.port_info[i]:
                 print(bucket.port_info[i][j])
 
+    def print_arp():
+        for i in bucket.arp_table:
+            print(i)
+
     prompt = 'drox> '
     command_dict = {'show path': print_path,\
                     'show matrix': print_matrix_adj,\
-                    'show port': print_port_info}
+                    'show port': print_port_info,\
+                    'show arp': print_arp}
 
     @classmethod
     def main(cls):

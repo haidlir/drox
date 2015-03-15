@@ -32,6 +32,7 @@ from config import config
 from bucket import bucket
 from lib import *
 import routing
+from forwarding import Forwarding
 import misc
 import cli
 
@@ -46,6 +47,9 @@ from pox.lib.revent import *
 class main(EventMixin):
     def __init__(self):
         core.listen_to_dependencies(self, listen_args={'openflow': {'priority':0}})
+
+        if config.USE_STATIC_GATEWAY:
+            bucket.gateway = config.STATIC_GATEWAY
 
         Timer(10, self._routing, recurring=True)
 
@@ -160,14 +164,16 @@ class main(EventMixin):
                                    will_delete.append(bucket.path_list[i][j][k])
                                    continue
                                 for l in range(len(bucket.path_list[i][j][k].path)-1):
-                                    if (bucket.path_list[i][j][k].path[l] == dpid and bucket.path_list[i][j][k].path[l+1] == dpid_next):
+                                    if (bucket.path_list[i][j][k].path[l] == dpid and \
+                                        bucket.path_list[i][j][k].path[l+1] == dpid_next):
                                         will_delete.append(bucket.path_list[i][j][k])
                                         break
                             bucket.path_list[i][j] = list(set(bucket.path_list[i][j]) - set(will_delete))
 
                     for cookie in bucket.flow_entry[dpid]:
                         for j in range(len(bucket.flow_entry[dpid][cookie].path)-1):
-                            if bucket.flow_entry[dpid][cookie].path[j] == dpid and bucket.flow_entry[dpid][cookie].path[j+1] == dpid_next:
+                            if bucket.flow_entry[dpid][cookie].path[j] == dpid and \
+                               bucket.flow_entry[dpid][cookie].path[j+1] == dpid_next:
                                msg = of.ofp_flow_mod()
                                msg.cookie = cookie
                                msg.command = of.OFPFC_DELETE
@@ -187,7 +193,40 @@ class main(EventMixin):
         pass
 
     def _handle_openflow_PacketIn(self, event):
-        pass
+        data_frame = event.parsed
+
+        if not data_frame.type or not data_frame.parsed:
+            return
+
+        # check whether data is LLDP packet
+        if data_frame.type == pkt.ethernet.LLDP_TYPE:
+            return
+
+        # check whether data is ARP packet
+        if data_frame.type == pkt.ethernet.ARP_TYPE:
+            misc.ARP._handle_arp(event)
+            return
+
+        data_packet = event.parsed.find('ipv4')
+        if not data_packet or not data_packet.parsed:
+            return
+
+        if data_packet.dstip == IPAddr('255.255.255.255'):
+            data_segment = data_packet.payload
+            if not data_segment or not data_segment.parsed or \
+               not isinstance(data_segment, pkt.udp):
+                return
+            if data_segment.srcport == 68 and \
+               data_segment.dstport == 67:
+                misc.DHCP._handle_dhcp(event)
+            return
+
+        if data_packet.dstip.is_multicast:
+            return
+        elif data_packet.dstip.inNetwork('172.16.0.0/23'):
+            Forwarding._handle_internal(event)
+        else:
+            Forwarding._handle_external(event)
 
 def launch():
     core.registerNew(main)

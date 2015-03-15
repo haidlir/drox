@@ -44,5 +44,5 @@ class config(object):
     USE_BGP = False
     BGP_GATEWAY = {}
 
-    USE_STATIC_GATEWAY = False
+    USE_STATIC_GATEWAY = True
     STATIC_GATEWAY = {}

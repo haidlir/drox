@@ -76,6 +76,13 @@ class LinkDetail(object):
                                                          self.load,
                                                          self.metric)
 
+class ARPDets(object):
+    def __init__(self, dpid, port, mac_addr, time = 0):
+        self.dpid = dpid
+        self.port = port
+        self.mac_addr = mac_addr
+        # self.time = time
+
 class OneWayPath(object):
     def __init__(self, path, source):
         self.path = path
@@ -93,3 +100,25 @@ class OneWayPath(object):
 
     def get_metric(self):
         return self.calc_metric()
+
+class FlowEntry(object):
+    def __init__(self, nw_src, nw_dst, nw_proto, tp_src, tp_dst, in_port, out_port, path = [], **opts):
+        self.nw_src = nw_src
+        self.nw_dst = nw_dst
+        self.nw_proto = nw_proto
+        self.tp_src = tp_src
+        self.tp_dst = tp_dst
+        self.in_port = in_port
+        self.out_port = out_port
+        self.path = path
+        if 'dpid' in opts:
+            self.initial_dpid = opts['dpid']
+        else:
+            self.initial_dpid = bucket.arp_table[nw_src].dpid
+        self.bps = 0.
+        self.byte_count = 0.
+
+    def __repr__(self):
+        return "%s:%s >%s> %s:%s |%s| %s Mbps" % (self.nw_src, self.tp_src,\
+                                               self.nw_proto, self.nw_dst, \
+                                               self.tp_dst, self.path, self.bps/10.**6)

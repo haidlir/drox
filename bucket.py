@@ -31,3 +31,4 @@ class bucket(object):
     port_info = {}   # contains all ports for each switch in detail
     arp_table = {}   # map ip address to mac address
     flow_entry = {}  # contains all flow entry which stored in the switches
+    gateway = {}

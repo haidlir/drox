@@ -51,8 +51,23 @@ class DFS(object):
             findOneSourcePath(i, i)
         return path
 
+    @classmethod
+    def getPath(cls, src, dst):
+        temp_metric = None
+        temp_path = []
+        for i in bucket.path_list[src][dst]:
+            metric_i = i.get_metric()
+            if temp_metric == None:
+                temp_metric = metric_i
+                temp_path = i.path
+            elif temp_metric > metric_i:
+                temp_metric = metric_i
+                temp_path = i.path
+        print(temp_path)
+        return temp_path
+
 class Djisktra(object):
     
     @classmethod
-    def findPath(cls):
+    def findPath(cls, matrix, source, destination):
         pass
