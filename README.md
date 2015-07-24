@@ -1,5 +1,6 @@
 # drox
-A network application on pox controller, which controls single-flat Ethernet network and is expected to enable multipath routing in Ethernet network.
-Additional features that will added, such as:
-> First-Hop Redundancy.
-> Interconnection to other network using OSPF or BGP.
+A network application on pox controller using Openflow 1.0, which controls single-flat Ethernet network and is expected to enable multipath routing in Ethernet network. It is built based on a paper titled "Enabling Multipath Routing for Unicast Traffic in Ethernet Network".
+
+**update :** <u>The Development of this SDN application is discontinued.</u>
+
+We move to Openflow 1.3 using RYU SDN Framework. The repository can be found [here](http://www.github.com/haidlir/SNHx)

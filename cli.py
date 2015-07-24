@@ -56,11 +56,20 @@ class cli(object):
         for i in bucket.arp_table:
             print(i)
 
+    def print_path_SNH():
+        for i in bucket.path_list:
+            print('source', i)
+            for j in bucket.path_list[i] :
+                print('    destination', j)
+                for k in bucket.path_list[i][j]:
+                    print('        ',k.path, k.get_metric_SNH())
+
     prompt = 'drox> '
     command_dict = {'show path': print_path,\
                     'show matrix': print_matrix_adj,\
                     'show port': print_port_info,\
-                    'show arp': print_arp}
+                    'show arp': print_arp,\
+                    'snh path': print_path_SNH}
 
     @classmethod
     def main(cls):

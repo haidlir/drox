@@ -29,15 +29,16 @@ from bucket import bucket
 
 def curr_to_capacity(curr):
     capacity = {
-      1   : 10,
-      2   : 10,
-      4   : 100,
-      8   : 100,
-      16  : 1000,
-      32  : 1000,
-      64  : 10000
+      1   : 10.,
+      2   : 10.,
+      4   : 100.,
+      8   : 100.,
+      16  : 1000.,
+      32  : 1000.,
+      64  : 10000.
     }
-    return capacity[127 & curr]
+    # return capacity[127 & curr]
+    return 100. # for TC in mininet
 
 class PortDetail(object):
     def __init__(self, index, name, port_no, state, capacity):
@@ -61,15 +62,18 @@ class LinkDetail(object):
         self.dpid = dpid
         self.capacity = capacity
         self.interface = interface
-        self.update_load()
+        # self.update_load()
 
     def update_load(self):
         self.load = bucket.port_info[self.dpid][self.interface].upload
-        self.metric = self.calc_metric()
+        # self.metric = self.calc_metric()
         # print(self.__repr__())
 
     def calc_metric(self):
-        return 10**2/float(self.capacity-self.load)
+        return 10**2/(self.capacity-self.load)
+
+    def residual_capacity(self):
+        return self.capacity-self.load
 
     def __repr__(self):
         return "capacity= %s; load = %s; metric = %s" % (self.capacity,
@@ -100,6 +104,21 @@ class OneWayPath(object):
 
     def get_metric(self):
         return self.calc_metric()
+
+    def calc_metric_SNH(self):
+        temp_metric = 0
+        for i in range(len(self.path)):
+            if i == 0:
+                metric_of_this_pair = bucket.matrix_adj[self.source][self.path[i]].residual_capacity()
+                temp_metric = metric_of_this_pair
+            else:
+                metric_of_this_pair = bucket.matrix_adj[self.path[i-1]][self.path[i]].residual_capacity()
+                if temp_metric > metric_of_this_pair:
+                    temp_metric = metric_of_this_pair
+        return temp_metric 
+
+    def get_metric_SNH(self):
+        return self.calc_metric_SNH()
 
 class FlowEntry(object):
     def __init__(self, nw_src, nw_dst, nw_proto, tp_src, tp_dst, in_port, out_port, path = [], **opts):

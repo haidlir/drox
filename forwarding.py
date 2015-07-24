@@ -47,10 +47,10 @@ class Forwarding(object):
     def _handle_internal(cls, event):
 
         def getPath(src, dst):
-            print('called')
             if config.LOCAL_ROUTING == 'DFS':
-                print('DFS')
-                return routing.DFS.getPath(src, dst)
+                # print('DFS')
+                # return routing.DFS.getPath(src, dst)
+                return routing.DFS.getPath_SNH(src, dst)
             elif config.LOCAL_ROUTING == 'Djisktra':
                 pass
 
@@ -58,12 +58,10 @@ class Forwarding(object):
             if event.dpid == bucket.arp_table[event.parsed.next.dstip].dpid:
                 path = [event.dpid]
             else:
-                print('sip')
                 path = [event.dpid] + getPath(event.dpid, bucket.arp_table[event.parsed.next.dstip].dpid)
         except:
             try:
                 core.main._routing()
-                print('here')
                 path = [event.dpid] + getPath(event.dpid, bucket.arp_table[event.parsed.next.dstip].dpid)
             except:
                 print('Tidak ada di tabel routing [%s]' % event.parsed)
@@ -75,19 +73,18 @@ class Forwarding(object):
         msg.idle_timeout = 10
         msg.hard_timeout = 20
 
-        used = True
-        while(used):
-            cookie = randint(0,2**64-1) # ukuran cookie itu 64 bit, dengan all 1s is reserved
-            for dpid_cek in bucket.flow_entry:
-                if cookie in bucket.flow_entry[dpid_cek]:
-                    used = True
-                    break
-                else:
-                    used = False
-            if not used:
-                break
-
-        msg.cookie = cookie
+        # used = False
+        # while(not used):
+        #     cookie = randint(0,2**64-1) # ukuran cookie itu 64 bit, dengan all 1s is reserved
+        #     for dpid_cek in bucket.flow_entry:
+        #         if cookie in bucket.flow_entry[dpid_cek]:
+        #             used = False
+        #             break
+        #         else:
+        #             used = True
+        #     if used:
+        #         break
+        cookie = randint(0,2**64-1) # ukuran cookie itu 64 bit, dengan all 1s is reserved
 
         for i in reversed(range(len(path))):
             msg.actions = []

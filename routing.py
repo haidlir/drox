@@ -64,7 +64,20 @@ class DFS(object):
             elif temp_metric > metric_i:
                 temp_metric = metric_i
                 temp_path = i.path
-        print(temp_path)
+        return temp_path
+
+    @classmethod
+    def getPath_SNH(cls, src, dst):
+        temp_metric = None
+        temp_path = []
+        for i in bucket.path_list[src][dst]:
+            metric_i = i.get_metric_SNH()
+            if temp_metric == None:
+                temp_metric = metric_i
+                temp_path = i.path
+            elif temp_metric < metric_i:
+                temp_metric = metric_i
+                temp_path = i.path
         return temp_path
 
 class Djisktra(object):
